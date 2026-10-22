@@ -83,6 +83,9 @@ cbt/
 │   ├── common.py
 │   ├── post_processing_types.py
 │   ├── report.py
+│   ├── regression/                 # regression detection (POC)
+│   │   ├── loader.py
+│   │   └── flags.py
 │   ├── formatter/
 │   │   ├── base_formatter.py
 │   │   ├── common_output_formatter.py
@@ -113,6 +116,8 @@ cbt/
 │   ├── test_workloads.py
 │   ├── test_async_ssh.py
 │   ├── test_monitoring_*.py
+│   ├── test_regression_loader.py
+│   ├── test_regression_flags.py
 │   └── test_post_processing_*.py / test_*_plotter.py / test_*_formatter.py …
 │
 ├── tools/                          # standalone offline analysis scripts (not imported)

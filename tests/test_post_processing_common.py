@@ -14,6 +14,7 @@ from post_processing.common import (
     file_is_empty,
     file_is_precondition,
     find_common_data_file_names,
+    float_percent_difference,
     get_blocksize,
     get_blocksize_percentage_operation_numjobs_from_file_name,
     get_date_time_string,
@@ -32,13 +33,17 @@ class TestCommonFunctions(unittest.TestCase):
 
     def test_get_blocksize_percentage_operation_from_file_name_simple(self) -> None:
         """Test parsing simple filename format: BLOCKSIZE_NUMJOBS_OPERATION"""
-        blocksize, read_percent, operation, number_of_jobs = get_blocksize_percentage_operation_numjobs_from_file_name("4096_1_read")
+        blocksize, read_percent, operation, number_of_jobs = get_blocksize_percentage_operation_numjobs_from_file_name(
+            "4096_1_read"
+        )
         self.assertEqual(blocksize, "4K")
         self.assertEqual(read_percent, "")
         self.assertEqual(operation, "Sequential Read")
         self.assertEqual(number_of_jobs, "1")
 
-    def test_get_blocksize_percentage_operation_from_file_name_with_percentage(self) -> None:
+    def test_get_blocksize_percentage_operation_from_file_name_with_percentage(
+        self,
+    ) -> None:
         """Test parsing filename with read/write percentage: BLOCKSIZE_NUMJOBS_READ_WRITE_OPERATION"""
         blocksize, read_percent, operation, number_of_jobs = get_blocksize_percentage_operation_numjobs_from_file_name(
             "4096_1_70_30_randrw"
@@ -215,6 +220,36 @@ class TestCommonFunctions(unittest.TestCase):
 
         result = calculate_percent_difference_to_baseline("100 IOps", "100 IOps")
         self.assertEqual(result, "0%")
+
+    def test_float_percent_difference_unrounded(self) -> None:
+        """A 9.6% drop should return the unrounded fraction, not a rounded string."""
+        result = float_percent_difference(baseline=100.0, candidate=90.4)
+        self.assertAlmostEqual(
+            result,
+            -0.096,
+            places=10,
+            msg="9.6% drop should return -0.096 (unrounded fraction)",
+        )
+
+    def test_float_percent_difference_improvement_is_positive(self) -> None:
+        """An improvement (candidate > baseline) should return a positive fraction."""
+        result = float_percent_difference(baseline=100.0, candidate=110.0)
+        self.assertAlmostEqual(
+            result,
+            0.10,
+            places=10,
+            msg="10% improvement should return +0.10",
+        )
+
+    def test_float_percent_difference_zero_baseline_raises(self) -> None:
+        """A zero baseline must raise ZeroDivisionError, matching the string function."""
+        with self.assertRaises(ZeroDivisionError, msg="Zero baseline should raise ZeroDivisionError"):
+            float_percent_difference(baseline=0.0, candidate=50.0)
+
+    def test_calculate_percent_difference_zero_baseline_raises(self) -> None:
+        """String function must still raise ZeroDivisionError on a zero baseline."""
+        with self.assertRaises(ZeroDivisionError, msg="Zero baseline should raise ZeroDivisionError"):
+            calculate_percent_difference_to_baseline("0 IOps", "50 IOps")
 
     def test_get_date_time_string(self) -> None:
         """Test getting formatted date/time string"""

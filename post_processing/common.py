@@ -55,7 +55,9 @@ _HOSTNAME_PATTERN: Pattern[str] = re.compile(
 )
 
 
-def get_blocksize_percentage_operation_numjobs_from_file_name(file_name: str) -> tuple[str, str, str, str]:
+def get_blocksize_percentage_operation_numjobs_from_file_name(
+    file_name: str,
+) -> tuple[str, str, str, str]:
     """
         Return the blocksize , operation and read/write percentage from the
     filename
@@ -104,7 +106,9 @@ def read_intermediate_file(file_path: str) -> CommonFormatDataType:
 
 
 def _extract_metrics_from_intermediate_file(
-    file_path: Path, metric_keys: list[str], format_function: Optional[list[Callable[[str], str]]] = None
+    file_path: Path,
+    metric_keys: list[str],
+    format_function: Optional[list[Callable[[str], str]]] = None,
 ) -> tuple[str, ...]:
     """
     Generic function to extract metrics from an intermediate format file.
@@ -168,7 +172,10 @@ def get_latency_throughput_from_file(file_path: Path) -> tuple[str, str]:
     assert isinstance(latency, str)
     latency_at_maximum_throughput: float = float(latency)
 
-    return (f"{max_throughput:.0f} {throughput_type}", f"{latency_at_maximum_throughput:.1f}")
+    return (
+        f"{max_throughput:.0f} {throughput_type}",
+        f"{latency_at_maximum_throughput:.1f}",
+    )
 
 
 def get_resource_details_from_file(file_path: Path) -> tuple[str, str]:
@@ -289,6 +296,15 @@ def find_common_data_file_names(directories: list[Path]) -> list[str]:
     return sorted(list(common_files))
 
 
+def float_percent_difference(baseline: float, candidate: float) -> float:
+    """
+    Return the unrounded fractional change from baseline to candidate.
+
+    Raises ZeroDivisionError if baseline is zero.
+    """
+    return (candidate - baseline) / baseline
+
+
 def calculate_percent_difference_to_baseline(baseline: str, comparison: str) -> str:
     """
     Compare a value to a baseline and calculate the percentage difference
@@ -298,10 +314,10 @@ def calculate_percent_difference_to_baseline(baseline: str, comparison: str) -> 
     baseline_value: float = float(baseline.split(" ")[0])
     comparison_value: float = float(comparison.split(" ")[0])
 
-    percentage_difference: float = (comparison_value - baseline_value) / baseline_value
+    percentage_difference: float = float_percent_difference(baseline_value, comparison_value)
 
     # format the value as a percentage, to 0 decimal places
-    return f"{percentage_difference:.0%}"  #
+    return f"{percentage_difference:.0%}"
 
 
 def get_date_time_string() -> str:
@@ -563,5 +579,7 @@ def find_timeseries_visualisation_directories(archive_directory: Path) -> list[P
         return sorted(paths, key=sort_key)
 
     return _find_visualisation_directories_with_filter(
-        archive_directory=archive_directory, filter_function=is_iodepth_directory, sort_function=sort_by_priority
+        archive_directory=archive_directory,
+        filter_function=is_iodepth_directory,
+        sort_function=sort_by_priority,
     )
