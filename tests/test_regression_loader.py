@@ -214,14 +214,15 @@ class TestLoadArchivePairs(unittest.TestCase):
 
         import io
 
-        handler = logging.StreamHandler(io.StringIO())
+        stream = io.StringIO()
+        handler = logging.StreamHandler(stream)
         handler.setLevel(logging.WARNING)
         logger = logging.getLogger("post_processing.regression.loader")
         logger.addHandler(handler)
         try:
             load_archive_pairs(baseline, candidate)
             self.assertEqual(
-                handler.stream.getvalue(),  # type: ignore[attr-defined]
+                stream.getvalue(),
                 "",
                 "No warning should be emitted when runtime_seconds matches",
             )

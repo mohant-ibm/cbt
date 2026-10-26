@@ -364,14 +364,14 @@ class TestIodepthGroups(unittest.TestCase):
         )
         cand = _depths(
             [
-                ("4", "1250"),
+                ("4", "1400"),
                 ("8", "1200"),
                 ("16", "1500"),
                 ("32", "2000"),
                 ("64", "3000"),
                 ("128", "4000"),
             ]
-        )  # +25% at 4
+        )  # +40% at 4
         result = compute_h3_low_depth_latency(base, cand, _T)
         self.assertEqual(result.band, Band.STRONG)
         self.assertEqual(result.iodepth, "4")
@@ -447,6 +447,80 @@ class TestH3LowDepthLatency(unittest.TestCase):
         )
         cand = _depths(
             [
+                ("1", "1400"),
+                ("2", "1400"),
+                ("4", "1400"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )  # +40% rise
+        result = compute_h3_low_depth_latency(base, cand, _T)
+        self.assertEqual(result.band, Band.STRONG, "40% rise in low group should be STRONG (>= 35%)")
+        self.assertEqual(result.tier, FlagTier.H)
+        self.assertIsNotNone(result.iodepth)
+
+    def test_weak_rise_in_low_group(self) -> None:
+        base = _depths(
+            [
+                ("1", "1000"),
+                ("2", "1000"),
+                ("4", "1000"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )
+        cand = _depths(
+            [
+                ("1", "1300"),
+                ("2", "1300"),
+                ("4", "1300"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )  # +30% rise
+        result = compute_h3_low_depth_latency(base, cand, _T)
+        self.assertEqual(result.band, Band.WEAK, "30% rise in low group should be WEAK (>= 25% and < 35%)")
+
+    def test_small_rise_in_low_group_is_valid(self) -> None:
+        base = _depths(
+            [
+                ("1", "1000"),
+                ("2", "1000"),
+                ("4", "1000"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )
+        cand = _depths(
+            [
+                ("1", "1200"),
+                ("2", "1200"),
+                ("4", "1200"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )  # +20% rise
+        result = compute_h3_low_depth_latency(base, cand, _T)
+        self.assertEqual(result.band, Band.VALID, "20% rise in low group should be VALID (< 25%)")
+
+    def test_exact_weak_boundary(self) -> None:
+        base = _depths(
+            [
+                ("1", "1000"),
+                ("2", "1000"),
+                ("4", "1000"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )
+        cand = _depths(
+            [
                 ("1", "1250"),
                 ("2", "1250"),
                 ("4", "1250"),
@@ -454,11 +528,60 @@ class TestH3LowDepthLatency(unittest.TestCase):
                 ("16", "3000"),
                 ("32", "4000"),
             ]
-        )
+        )  # +25% rise
         result = compute_h3_low_depth_latency(base, cand, _T)
-        self.assertEqual(result.band, Band.STRONG)
-        self.assertEqual(result.tier, FlagTier.H)
-        self.assertIsNotNone(result.iodepth)
+        self.assertEqual(result.band, Band.WEAK, "Exactly +25% rise should be WEAK")
+
+    def test_exact_strong_boundary(self) -> None:
+        base = _depths(
+            [
+                ("1", "1000"),
+                ("2", "1000"),
+                ("4", "1000"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )
+        cand = _depths(
+            [
+                ("1", "1350"),
+                ("2", "1350"),
+                ("4", "1350"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )  # +35% rise
+        result = compute_h3_low_depth_latency(base, cand, _T)
+        self.assertEqual(result.band, Band.STRONG, "Exactly +35% rise should be STRONG")
+
+    def test_general_thresholds_do_not_override_h3_fixed_thresholds(self) -> None:
+        # Even with strict thresholds (e.g. weak=0.05, strong=0.10),
+        # H3 maintains its overriding 25% weak and 35% strong thresholds.
+        strict_t = Thresholds(weak=0.05, strong=0.10)
+        base = _depths(
+            [
+                ("1", "1000"),
+                ("2", "1000"),
+                ("4", "1000"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )
+        cand_20 = _depths(
+            [
+                ("1", "1200"),
+                ("2", "1200"),
+                ("4", "1200"),
+                ("8", "2000"),
+                ("16", "3000"),
+                ("32", "4000"),
+            ]
+        )  # +20% rise -> VALID for H3 despite strict_t having weak=0.05
+        result = compute_h3_low_depth_latency(base, cand_20, strict_t)
+        self.assertEqual(result.band, Band.VALID, "+20% rise must be VALID for H3 even with strict general thresholds")
 
     def test_high_depth_rise_does_not_fire_h3(self) -> None:
         base = _depths(

@@ -117,7 +117,7 @@ disallow_untyped_defs = false
 # ============================================================
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--verbose --durations=5 --capture=no --exitfirst"
+addopts = "--verbose --durations=5 --capture=no "
 
 # ============================================================
 # Pylint

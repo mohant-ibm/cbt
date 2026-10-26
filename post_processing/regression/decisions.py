@@ -32,7 +32,7 @@ def _compute_fail_target(num_workloads: int) -> int:
     return max(1, min(3, math.ceil(num_workloads * 0.5)))
 
 
-def compute_workload_decision(flags: list) -> WorkloadDecision:
+def compute_workload_decision(flags: list[FlagResult]) -> WorkloadDecision:
     """
     Derive a workload decision from a list of FlagResult objects.
 

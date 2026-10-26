@@ -17,6 +17,7 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 from post_processing.common import (
     file_is_empty,
@@ -111,11 +112,11 @@ def _check_runtime_seconds(
         candidate_entry = candidate_data.get(key)
         if not isinstance(candidate_entry, dict):
             continue
-        baseline_rt: str | None = value.get("runtime_seconds")
-        candidate_rt: str | None = candidate_entry.get("runtime_seconds")
+        baseline_rt: Optional[str] = value.get("runtime_seconds")
+        candidate_rt: Optional[str] = candidate_entry.get("runtime_seconds")
         if baseline_rt is not None and candidate_rt is not None and baseline_rt != candidate_rt:
             log.warning(
-                "runtime_seconds differs for workload '%s' at iodepth %s: " "baseline=%s candidate=%s",
+                "runtime_seconds differs for workload '%s' at iodepth %s: baseline=%s candidate=%s",
                 stem,
                 key,
                 baseline_rt,

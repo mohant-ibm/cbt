@@ -190,12 +190,16 @@ class Thresholds(NamedTuple):
     """
     Tunable thresholds for regression detection.
 
-    weak   — fractional worsening at or above which a flag is WEAK (default 0.10).
-    strong — fractional worsening at or above which a flag is STRONG (default 0.20).
+    weak      — fractional worsening at or above which a flag is WEAK (default 0.08).
+    strong    — fractional worsening at or above which a flag is STRONG (default 0.12).
+    h3_weak   — overriding weak threshold for H3 low-depth latency (default 0.25).
+    h3_strong — overriding strong threshold for H3 low-depth latency (default 0.35).
     """
 
-    weak: float
-    strong: float
+    weak: float = 0.08
+    strong: float = 0.12
+    h3_weak: float = 0.25
+    h3_strong: float = 0.35
 
 
 class Decision(Enum):
@@ -217,7 +221,7 @@ class WorkloadDecision(NamedTuple):
 
     stem: str
     decision: Decision
-    flags: list
+    flags: list[FlagResult]
 
 
 class RunDecision(NamedTuple):

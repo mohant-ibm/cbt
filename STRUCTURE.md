@@ -86,7 +86,9 @@ cbt/
 │   ├── regression/                 # regression detection (POC)
 │   │   ├── loader.py
 │   │   ├── flags.py
-│   │   └── decisions.py
+│   │   ├── decisions.py
+│   │   ├── summary.py
+│   │   └── runner.py
 │   ├── formatter/
 │   │   ├── base_formatter.py
 │   │   ├── common_output_formatter.py
@@ -120,9 +122,11 @@ cbt/
 │   ├── test_regression_loader.py
 │   ├── test_regression_flags.py
 │   ├── test_regression_decisions.py
+│   ├── test_regression_summary.py
 │   └── test_post_processing_*.py / test_*_plotter.py / test_*_formatter.py …
 │
 ├── tools/                          # standalone offline analysis scripts (not imported)
+│   ├── check_regression.py         # compare candidate archive against baseline for regressions
 │   ├── config_wizard.py
 │   ├── serialise_benchmark.py
 │   ├── crimson/                    # Crimson OSD-specific bench helpers
@@ -135,6 +139,7 @@ cbt/
 │
 ├── docs/
 │   ├── ARCHITECTURE.md             # architecture boundaries & execution contracts
+│   ├── dev/check-regression.md     # regression detection POC guide and examples
 │   ├── dev/coding-guidelines.md    # ← read before writing any code (see AGENTS.md)
 │   ├── workloads/elbencho-s3.md    # Elbencho S3 feature doc
 │   └── *.md                        # design/release/integration docs

@@ -17,6 +17,7 @@ Zero-baseline rules (per Q&A #9):
 NOT_EVALUABLE is returned when a field is missing or non-numeric.
 """
 
+from collections.abc import Mapping
 from typing import Optional
 
 from post_processing.common import float_percent_difference
@@ -54,7 +55,7 @@ def _not_evaluable(tier: FlagTier, reason: str) -> FlagResult:
     )
 
 
-def _read_float(data: dict[str, object], key: str) -> tuple[Optional[float], Optional[str]]:
+def _read_float(data: Mapping[str, object], key: str) -> tuple[Optional[float], Optional[str]]:
     """
     Extract *key* from *data* as a float.
 
@@ -159,7 +160,7 @@ def _common_iodepths(
     b_keys = {k for k, v in baseline.items() if isinstance(v, dict)}
     c_keys = {k for k, v in candidate.items() if isinstance(v, dict)}
     common = b_keys & c_keys
-    return sorted(common, key=lambda k: int(k))
+    return sorted(common, key=int)
 
 
 def _latency_flag_for_group(
@@ -183,8 +184,8 @@ def _latency_flag_for_group(
         if not isinstance(b_entry, dict) or not isinstance(c_entry, dict):
             continue
 
-        b_lat_raw, b_err = _read_float(b_entry, "latency")  # type: ignore[arg-type]
-        c_lat_raw, c_err = _read_float(c_entry, "latency")  # type: ignore[arg-type]
+        b_lat_raw, b_err = _read_float(b_entry, "latency")
+        c_lat_raw, c_err = _read_float(c_entry, "latency")
 
         if b_lat_raw is None or c_lat_raw is None:
             reason = b_err or c_err or "latency field missing"
@@ -215,8 +216,8 @@ def _latency_flag_for_group(
 
 
 def compute_h1_max_iops(
-    baseline: dict[str, object],
-    candidate: dict[str, object],
+    baseline: Mapping[str, object],
+    candidate: Mapping[str, object],
     thresholds: Thresholds,
 ) -> FlagResult:
     """H1: maximum_iops — fires when drops."""
@@ -228,8 +229,8 @@ def compute_h1_max_iops(
 
 
 def compute_h2_max_bandwidth(
-    baseline: dict[str, object],
-    candidate: dict[str, object],
+    baseline: Mapping[str, object],
+    candidate: Mapping[str, object],
     thresholds: Thresholds,
 ) -> FlagResult:
     """H2: maximum_bandwidth — fires when drops."""
@@ -241,8 +242,8 @@ def compute_h2_max_bandwidth(
 
 
 def compute_h3_low_depth_latency(
-    baseline: dict[str, object],
-    candidate: dict[str, object],
+    baseline: Mapping[str, object],
+    candidate: Mapping[str, object],
     thresholds: Thresholds,
 ) -> FlagResult:
     """H3: latency over the bottom third of common iodepths — fires when rises."""
@@ -253,12 +254,13 @@ def compute_h3_low_depth_latency(
         return _not_evaluable(FlagTier.H, f"fewer than 3 common iodepths ({len(common)} found)")
     group_size = max(1, len(common) // 3)
     low_group = common[:group_size]
-    return _latency_flag_for_group(FlagTier.H, low_group, b, c, thresholds)
+    h3_thresholds = Thresholds(weak=thresholds.h3_weak, strong=thresholds.h3_strong)
+    return _latency_flag_for_group(FlagTier.H, low_group, b, c, h3_thresholds)
 
 
 def compute_m1_max_cpu(
-    baseline: dict[str, object],
-    candidate: dict[str, object],
+    baseline: Mapping[str, object],
+    candidate: Mapping[str, object],
     thresholds: Thresholds,
 ) -> FlagResult:
     """M1: maximum_cpu_usage — fires when rises."""
@@ -270,8 +272,8 @@ def compute_m1_max_cpu(
 
 
 def compute_m2_max_memory(
-    baseline: dict[str, object],
-    candidate: dict[str, object],
+    baseline: Mapping[str, object],
+    candidate: Mapping[str, object],
     thresholds: Thresholds,
 ) -> FlagResult:
     """M2: maximum_memory_usage — fires when rises."""
@@ -283,8 +285,8 @@ def compute_m2_max_memory(
 
 
 def compute_m3_high_depth_latency(
-    baseline: dict[str, object],
-    candidate: dict[str, object],
+    baseline: Mapping[str, object],
+    candidate: Mapping[str, object],
     thresholds: Thresholds,
 ) -> FlagResult:
     """M3: latency over the top third of common iodepths — fires when rises."""
